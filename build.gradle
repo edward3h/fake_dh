@@ -1,0 +1,23 @@
+plugins {
+    id 'com.avast.gradle.docker-compose' version "0.13.3"
+}
+
+task prepare(type: Exec) {
+   // outputs.files('../dockershare/etc/authorized_keys/theuser', '../dockershare/home/theuser.ssh/id_ecdsa.pub')
+    commandLine './prepare_ssh.sh'
+}
+
+dockerCompose {
+    startedServices = ['web']
+}
+
+composeUp.dependsOn prepare
+
+task deploy {
+    dependsOn prepare, composeUp
+}
+
+task clean(type: Delete) {
+    dependsOn composeDown
+    delete '../dockershare'
+}

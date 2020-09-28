@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+    web:
+        build: .
+        ports:
+            - 80
+            - 22
+        volumes: 
+            - "$HOST_PROJECT_PATH/dockershare/etc/ssh:/etc/ssh"
+            - "$HOST_PROJECT_PATH/dockershare/etc/authorized_keys:/etc/authorized_keys"
+        environment: 
+            SSH_USERS: "theuser:1000:1000"
+        networks:
+            default:
+                aliases: 
+                    - fcgi-experiments
+
+    mysql:
+        image: mysql:5.7
+        environment:
+          MYSQL_ROOT_PASSWORD: insecure
+
+networks: 
+    default:
+        external: 
+            name: "$NETWORK_NAME"
