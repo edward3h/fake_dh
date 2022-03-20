@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+
+PROJECT_PATH=$(git rev-parse --show-toplevel)
+
+BUILD="$PROJECT_PATH/build"
+mkdir -p "$BUILD/app"
+cp "$PROJECT_PATH/test/"* "$BUILD/app/"
+
+IMAGE_TAG="fake_dh:test"
+docker build -t "$IMAGE_TAG" "$PROJECT_PATH" | tee "$BUILD/build.log" || exit 1
+
+CONTAINER=$(docker run -d --rm -P -v "$BUILD/app:/app" "$IMAGE_TAG")
+PORT=$(docker port "$CONTAINER" 80 | cut -d':' -f2)
+# echo $PORT
+x=0
+
+curl "http://localhost:$PORT/" | grep -q 'Default server page' || ((x = x + 1))
+curl -H "Host: theuser" "http://localhost:$PORT/" | grep -q 'Test user page' || ((x = x + 1))
+curl -H "Host: theuser" "http://localhost:$PORT/count.fcgi" | grep -q -F 'request number 1.' || ((x = x + 1))
+curl -H "Host: theuser" "http://localhost:$PORT/count.fcgi" | grep -q -F 'request number 2.' || ((x = x + 1))
+
+docker stop "$CONTAINER"
+
+exit $x
